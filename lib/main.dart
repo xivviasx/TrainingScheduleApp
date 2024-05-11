@@ -1,43 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'loginPage.dart';
+import 'homePage.dart';
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      // Application name
-      title: 'Flutter Hello World',
-      // Application theme data, you can set the colors for the application as
-      // you want
-      theme: ThemeData(
-        // useMaterial3: false,
-        primarySwatch: Colors.blue,
-      ),
-      // A widget which will be started on application startup
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+      apiKey: "AIzaSyDHb4mNThf9SXGoGRlwbB8EMXo8ev0tQSI",
+      appId: "1:177822016585:android:6841b4d6350f9814884b98",
+      messagingSenderId: "177822016585'",
+      projectId: "calendar-a5a4d",
+    ),
+  );
+  runApp(MyApp());
 }
 
-class MyHomePage extends StatelessWidget {
-  final String title;
-  const MyHomePage({super.key, required this.title});  
-
+class MyApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // The title text which will be shown on the action bar
-        title: Text(title),
-      ),
-      body: Center(
-        child: Text(
-          'Hello, World!',
+  Widget build(BuildContext context) => MaterialApp(
+        initialRoute: '/',
+        routes: {
+          '/': (context) => LoginPage(),
+          '/home': (context) {
+            // Sprawdź, czy użytkownik jest zalogowany
+            if (FirebaseAuth.instance.currentUser != null) {
+              // Jeśli użytkownik jest zalogowany, przejdź do strony domowej
+              return HomePage();
+            } else {
+              // Jeśli użytkownik nie jest zalogowany, przejdź do strony logowania
+              return LoginPage();
+            }
+          },
+        },
+        theme: ThemeData(
+          primaryColor: Colors.blue,
+          backgroundColor: Colors.white,
+          textTheme: TextTheme(
+            bodyText1: TextStyle(color: Colors.white),
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
