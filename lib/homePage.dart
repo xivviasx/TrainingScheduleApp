@@ -1,3 +1,4 @@
+import 'package:Calendar/calendar_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'profilePage.dart';
@@ -11,7 +12,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Widget bodyWidget = Calendar();
+  Widget bodyWidget = CalendarMenu();
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +59,7 @@ class _HomePageState extends State<HomePage> {
               title: Text('Moje kalendarze'),
               onTap: () {
                 setState(() {
-                  bodyWidget = Calendar();
+                  bodyWidget = CalendarMenu(); //Calendar();
                 });
                 Navigator.pop(context);
               },
