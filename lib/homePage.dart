@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Calendar',
+          'Kalendarz',
           style: TextStyle(
             color: Colors.white,
           ),

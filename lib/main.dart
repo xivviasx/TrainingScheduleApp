@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'loginPage.dart';
 import 'homePage.dart';
+import 'registerPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +16,7 @@ void main() async {
       projectId: "calendar-a5a4d",
     ),
   );
+  FirebaseFirestore.instance;
   runApp(MyApp());
 }
 
@@ -23,13 +26,11 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => LoginPage(),
+          '/register': (context) => RegisterPage(),
           '/home': (context) {
-            // Sprawdź, czy użytkownik jest zalogowany
             if (FirebaseAuth.instance.currentUser != null) {
-              // Jeśli użytkownik jest zalogowany, przejdź do strony domowej
               return HomePage();
             } else {
-              // Jeśli użytkownik nie jest zalogowany, przejdź do strony logowania
               return LoginPage();
             }
           },

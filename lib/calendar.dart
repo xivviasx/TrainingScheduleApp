@@ -48,7 +48,7 @@ class _CalendarState extends State<Calendar> {
         SizedBox(height: 20),
         Day(
           selectedDay: _selectedDay,
-        ), // Dodajemy widget Day pod tekstem "Treningi dnia:"
+        ),
       ],
     );
   }
