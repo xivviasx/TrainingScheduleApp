@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'day.dart'; // Importujemy widget Day z pliku day.dart
+
+// Importowanie widgeta Day
+import 'day.dart';
 
 class Calendar extends StatefulWidget {
-  const Calendar({Key? key}) : super(key: key);
+  final String calendarId;
+
+  const Calendar({Key? key, required this.calendarId}) : super(key: key);
 
   @override
   _CalendarState createState() => _CalendarState();
@@ -12,7 +16,6 @@ class Calendar extends StatefulWidget {
 class _CalendarState extends State<Calendar> {
   late DateTime _selectedDay;
   late DateTime _focusedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
@@ -23,33 +26,32 @@ class _CalendarState extends State<Calendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TableCalendar(
-          firstDay: DateTime.utc(2010, 10, 16),
-          lastDay: DateTime.utc(2030, 3, 14),
-          focusedDay: _focusedDay,
-          calendarFormat: _calendarFormat,
-          selectedDayPredicate: (day) {
-            return isSameDay(_selectedDay, day);
-          },
-          onDaySelected: (selectedDay, focusedDay) {
-            setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
-            });
-          },
-          onFormatChanged: (format) {
-            setState(() {
-              _calendarFormat = format;
-            });
-          },
-        ),
-        SizedBox(height: 20),
-        Day(
-          selectedDay: _selectedDay,
-        ),
-      ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Kalendarz'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Kalendarz
+          TableCalendar(
+            firstDay: DateTime.utc(2010, 10, 16),
+            lastDay: DateTime.utc(2030, 3, 14),
+            focusedDay: _focusedDay,
+            selectedDayPredicate: (day) {
+              return isSameDay(_selectedDay, day);
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+            },
+          ),
+          // Widget Day
+          Day(selectedDay: _selectedDay),
+        ],
+      ),
     );
   }
 }
