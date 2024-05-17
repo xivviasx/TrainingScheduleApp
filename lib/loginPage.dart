@@ -12,7 +12,13 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendar'),
+        title: Text(
+          'Calendar',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -22,7 +28,7 @@ class LoginPage extends StatelessWidget {
             TextFormField(
               controller: _emailController,
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelText: 'Login',
                 border: OutlineInputBorder(),
                 labelStyle: TextStyle(color: Colors.black),
               ),
@@ -32,7 +38,7 @@ class LoginPage extends StatelessWidget {
             TextFormField(
               controller: _passwordController,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: 'Hasło',
                 border: OutlineInputBorder(),
                 labelStyle: TextStyle(color: Colors.black),
               ),
@@ -49,7 +55,7 @@ class LoginPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                     primary: Theme.of(context).primaryColor),
                 child: Text(
-                  'Log in',
+                  'Zaloguj',
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -64,7 +70,7 @@ class LoginPage extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(primary: Colors.grey[300]),
                 child: Text(
-                  'Register',
+                  'Zarejestruj',
                   style: TextStyle(color: Colors.grey[800]),
                 ),
               ),

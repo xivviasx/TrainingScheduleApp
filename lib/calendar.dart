@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-
-// Importowanie widgeta Day
 import 'day.dart';
 
 class Calendar extends StatefulWidget {
@@ -49,7 +47,7 @@ class _CalendarState extends State<Calendar> {
             },
           ),
           // Widget Day
-          Day(selectedDay: _selectedDay),
+          Day(selectedDay: _selectedDay, calendarId: widget.calendarId),
         ],
       ),
     );
