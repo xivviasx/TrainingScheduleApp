@@ -65,9 +65,7 @@ class CalendarMenu extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Calendar(
-            calendarId:
-                calendarId), // Przekazuje identyfikator kalendarza do nowego widoku kalendarza
+        builder: (context) => Calendar(calendarId: calendarId),
       ),
     );
   }
