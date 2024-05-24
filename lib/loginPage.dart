@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'homePage.dart';
-import 'registerPage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'auth_provider.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends ConsumerWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+
+    authState.when(
+      data: (user) {
+        if (user != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.pushReplacementNamed(context, '/home');
+          });
+        }
+      },
+      loading: () {},
+      error: (error, stackTrace) {},
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -50,7 +62,7 @@ class LoginPage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _login(context);
+                  _login(context, ref);
                 },
                 style: ElevatedButton.styleFrom(
                     primary: Theme.of(context).primaryColor),
@@ -81,15 +93,13 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  Future<void> _login(BuildContext context) async {
+  Future<void> _login(BuildContext context, WidgetRef ref) async {
+    final auth = ref.read(authProvider);
     try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await auth.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
-      print('Login successful! User ID');
-      Navigator.pushNamed(context, '/home');
     } catch (error) {
       print('Login error: $error');
       ScaffoldMessenger.of(context).showSnackBar(

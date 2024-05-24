@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'auth_provider.dart';
 import 'loginPage.dart';
 import 'homePage.dart';
 import 'registerPage.dart';
@@ -16,31 +16,27 @@ void main() async {
       projectId: "calendar-a5a4d",
     ),
   );
-  FirebaseFirestore.instance;
-  runApp(MyApp());
+
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        initialRoute: '/',
-        routes: {
-          '/': (context) => LoginPage(),
-          '/register': (context) => RegisterPage(),
-          '/home': (context) {
-            if (FirebaseAuth.instance.currentUser != null) {
-              return HomePage();
-            } else {
-              return LoginPage();
-            }
-          },
-        },
-        theme: ThemeData(
-          primaryColor: Colors.blue,
-          backgroundColor: Colors.white,
-          textTheme: TextTheme(
-            bodyText1: TextStyle(color: Colors.white),
-          ),
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      initialRoute: '/',
+      routes: {
+        '/': (context) => LoginPage(),
+        '/register': (context) => RegisterPage(),
+        '/home': (context) => HomePage(),
+      },
+      theme: ThemeData(
+        primaryColor: Colors.blue,
+        backgroundColor: Colors.white,
+        textTheme: TextTheme(
+          bodyText1: TextStyle(color: Colors.white),
         ),
-      );
+      ),
+    );
+  }
 }
