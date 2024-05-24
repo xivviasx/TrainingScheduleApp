@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'auth_provider.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends ConsumerWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Rejestracja', style: TextStyle(color: Colors.white)),
@@ -37,6 +36,7 @@ class RegisterPage extends StatelessWidget {
               controller: _passwordController,
               decoration: InputDecoration(border: OutlineInputBorder()),
               style: TextStyle(color: Colors.black),
+              obscureText: true,
             ),
             SizedBox(height: 16),
             Text('Imię'),
@@ -59,7 +59,7 @@ class RegisterPage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _register(context);
+                  _register(context, ref);
                 },
                 style: ElevatedButton.styleFrom(
                     primary: Theme.of(context).primaryColor),
@@ -75,25 +75,16 @@ class RegisterPage extends StatelessWidget {
     );
   }
 
-  Future<void> _register(BuildContext context) async {
+  Future<void> _register(BuildContext context, WidgetRef ref) async {
+    final auth = ref.read(authProvider);
     try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await auth.register(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        _firstNameController.text.trim(),
+        _lastNameController.text.trim(),
       );
 
-      // Save user details to Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
-        'email': _emailController.text.trim(),
-        'firstName': _firstNameController.text.trim(),
-        'lastName': _lastNameController.text.trim(),
-      });
-
-      print('Registration successful! User ID: ${userCredential.user!.uid}');
       Navigator.pushReplacementNamed(context, '/');
     } catch (error) {
       print('Registration error: $error');
