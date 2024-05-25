@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'profilePage.dart';
 import 'calendar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'auth_provider.dart';
+import 'providers/auth_provider.dart';
 
 class HomePage extends ConsumerWidget {
   @override
