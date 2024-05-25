@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,8 +35,9 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut(BuildContext context) async {
     await _ref.read(firebaseAuthProvider).signOut();
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
   }
 
   Future<void> register(
