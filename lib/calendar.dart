@@ -26,7 +26,14 @@ class _CalendarState extends State<Calendar> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Kalendarz'),
+        title: Text(
+          'Kalendarz',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,10 +51,16 @@ class _CalendarState extends State<Calendar> {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
+              // Przekazanie wybranego dnia do widgetu Day
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Day(
+                      selectedDay: selectedDay, calendarId: widget.calendarId),
+                ),
+              );
             },
           ),
-          // Widget Day
-          Day(selectedDay: _selectedDay, calendarId: widget.calendarId),
         ],
       ),
     );

@@ -138,11 +138,17 @@ class _CreateEventPageState extends State<CreateEventPage> {
         _endTime.minute,
       );
 
-      await FirebaseFirestore.instance
+      String formattedDate =
+          '${widget.selectedDay.year}-${widget.selectedDay.month}-${widget.selectedDay.day}';
+
+      CollectionReference eventsCollection = FirebaseFirestore.instance
           .collection('calendars')
           .doc(widget.calendarId)
           .collection('events')
-          .add({
+          .doc(formattedDate)
+          .collection('dayEvents');
+
+      await eventsCollection.add({
         'name': _eventNameController.text,
         'start_time': Timestamp.fromDate(startDateTime),
         'end_time': Timestamp.fromDate(endDateTime),
