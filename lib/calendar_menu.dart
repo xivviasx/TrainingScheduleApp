@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/calendar_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'calendar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CalendarMenu extends StatelessWidget {
+class CalendarMenu extends ConsumerWidget {
   const CalendarMenu({Key? key}) : super(key: key);
 
-  void _createNewCalendar(BuildContext context) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      //dzięki await czeka na zamknięcie okna dialogowego
+  void _createNewCalendar(BuildContext context, WidgetRef ref) async {
+    final calendarRepository = ref.read(calendarRepositoryProvider);
+
+    if (calendarRepository.isUserLogged() == true) {
       String? calendarName = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
@@ -34,30 +36,8 @@ class CalendarMenu extends StatelessWidget {
       );
 
       if (calendarName != null && calendarName.isNotEmpty) {
-        DocumentReference newCalendarRef =
-            FirebaseFirestore.instance.collection('calendars').doc();
-        //zrobienie nowego kalendarza
-        await newCalendarRef.set({
-          'name': calendarName,
-          'owner': user.uid,
-        });
-        //dodanie dokumentu ownera do kolekcji uzytkowników kalendarza
-        await newCalendarRef.collection('participants').doc(user.uid).set({
-          'role': 'owner',
-        });
-        //dodanie kalendarza do kolecji kalendarzy ownera
-        DocumentReference userCalendarRef = FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('userCalendars')
-            .doc(newCalendarRef.id);
-        await userCalendarRef.set({
-          'calendarId': newCalendarRef.id,
-          'name': calendarName,
-          'role': 'owner',
-        });
+        await calendarRepository.createNewCalendar(calendarName);
       }
-      ;
     }
   }
 
@@ -71,14 +51,11 @@ class CalendarMenu extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    User? user = FirebaseAuth.instance.currentUser;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final calendarRepository = ref.watch(calendarRepositoryProvider);
+    //User? user = FirebaseAuth.instance.currentUser;
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(user?.uid)
-          .collection('userCalendars')
-          .snapshots(),
+      stream: calendarRepository.getUserCalendars(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
@@ -93,8 +70,7 @@ class CalendarMenu extends StatelessWidget {
             calendarButtons.add(
               ElevatedButton(
                 onPressed: () {
-                  _openCalendar(context,
-                      calendarId); // Wywołuje funkcję nawigacji po kliknięciu kalendarza
+                  _openCalendar(context, calendarId);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -120,7 +96,7 @@ class CalendarMenu extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: FloatingActionButton(
-                        onPressed: () => _createNewCalendar(context),
+                        onPressed: () => _createNewCalendar(context, ref),
                         backgroundColor: Theme.of(context).primaryColor,
                         child: Icon(Icons.add, color: Colors.white),
                       ),
