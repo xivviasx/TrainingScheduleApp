@@ -9,6 +9,11 @@ final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
   return CalendarRepository(firestore, firebaseAuth);
 });
 
+final userCalendarsProvider = StreamProvider<QuerySnapshot>((ref) {
+  final calendarRepository = ref.read(calendarRepositoryProvider);
+  return calendarRepository.getUserCalendars();
+});
+
 class CalendarRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;

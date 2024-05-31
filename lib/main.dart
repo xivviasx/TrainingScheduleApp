@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/auth_provider.dart';
 import 'loginPage.dart';
-import 'homePage.dart';
+import 'home_page.dart';
 import 'registerPage.dart';
 
 void main() async {

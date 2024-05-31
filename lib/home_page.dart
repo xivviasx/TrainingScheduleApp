@@ -1,7 +1,7 @@
 import 'package:Calendar/calendar_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'profilePage.dart';
+import 'profile_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/auth_provider.dart';
 
