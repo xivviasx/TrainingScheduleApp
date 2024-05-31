@@ -24,7 +24,7 @@ class Day extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Treningi ${selectedDay.day}.${selectedDay.month}.${selectedDay.year}',
+          '${selectedDay.day}.${selectedDay.month}.${selectedDay.year}',
           style: TextStyle(
             color: Colors.white,
           ),

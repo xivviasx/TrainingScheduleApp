@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_provider.dart';
 
-// Firestore operations provider for Calendar
 final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
   final firestore = ref.read(firestoreProvider);
   final firebaseAuth = ref.read(firebaseAuthProvider);
@@ -74,5 +73,81 @@ class CalendarRepository {
         .doc(formattedDate)
         .collection('dayEvents')
         .snapshots();
+  }
+
+  Future<String> getCalendarName(String calendarId) async {
+    DocumentSnapshot doc =
+        await _firestore.collection('calendars').doc(calendarId).get();
+    if (doc.exists) {
+      var data = doc.data() as Map<String, dynamic>?;
+      if (data != null && data.containsKey('name')) {
+        return data['name'] as String;
+      } else {
+        throw Exception("Calendar name not found");
+      }
+    } else {
+      throw Exception("Calendar not found");
+    }
+  }
+
+  Future<void> addParticipantByEmail(String calendarId, String email) async {
+    // Find the user by email
+    QuerySnapshot userQuery = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (userQuery.docs.isEmpty) {
+      throw Exception("User not found");
+    }
+
+    DocumentSnapshot userDoc = userQuery.docs.first;
+    String userId = userDoc.id;
+
+    DocumentReference calendarRef =
+        _firestore.collection('calendars').doc(calendarId);
+    DocumentReference userRef = _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('userCalendars')
+        .doc(calendarId);
+
+    var calendarData = await calendarRef.get();
+    var calendarName =
+        (calendarData.data() as Map<String, dynamic>?)?['name'] ?? '';
+
+    await calendarRef
+        .collection('participants')
+        .doc(userId)
+        .set({'role': 'participant'});
+    await userRef.set({
+      'calendarId': calendarId,
+      'name': calendarName,
+      'role': 'participant'
+    });
+  }
+
+  Stream<List<String>> getCalendarMembersNames(String calendarId) {
+    return _firestore
+        .collection('calendars')
+        .doc(calendarId)
+        .collection('participants')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<String> names = [];
+      for (DocumentSnapshot doc in snapshot.docs) {
+        String userId = doc.id;
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+          String? userEmail = userDoc.get('email');
+          if (userEmail != null) {
+            names.add(userEmail);
+          }
+        }
+      }
+      return names;
+    });
   }
 }

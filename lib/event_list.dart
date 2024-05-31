@@ -28,7 +28,16 @@ class EventList extends ConsumerWidget {
         } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Text('Brak wydarzeń na ten dzień'));
         } else {
-          List<Widget> eventWidgets = snapshot.data!.docs.map((doc) {
+          var sortedDocs = snapshot.data!.docs.map((doc) => doc).toList()
+            ..sort((a, b) {
+              Timestamp aStart =
+                  (a.data() as Map<String, dynamic>)['start_time'];
+              Timestamp bStart =
+                  (b.data() as Map<String, dynamic>)['start_time'];
+              return aStart.compareTo(bStart);
+            });
+
+          List<Widget> eventWidgets = sortedDocs.map((doc) {
             var data = doc.data() as Map<String, dynamic>;
             String eventName = data['name'];
             Timestamp startTimestamp = data['start_time'];
@@ -86,10 +95,8 @@ class EventList extends ConsumerWidget {
             );
           }).toList();
 
-          return Expanded(
-            child: ListView(
-              children: eventWidgets,
-            ),
+          return ListView(
+            children: eventWidgets,
           );
         }
       },
