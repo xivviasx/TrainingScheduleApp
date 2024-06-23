@@ -16,10 +16,10 @@ class EventList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final calendarRepository = ref.watch(calendarRepositoryProvider);
+    final calendarService = ref.watch(calendarServiceProvider);
 
     return StreamBuilder<QuerySnapshot>(
-      stream: calendarRepository.getEventsForDay(calendarId, selectedDay),
+      stream: calendarService.getEventsForDay(calendarId, selectedDay),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -28,78 +28,119 @@ class EventList extends ConsumerWidget {
         } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Text('Brak wydarzeń na ten dzień'));
         } else {
-          var sortedDocs = snapshot.data!.docs.map((doc) => doc).toList()
-            ..sort((a, b) {
-              Timestamp aStart =
-                  (a.data() as Map<String, dynamic>)['start_time'];
-              Timestamp bStart =
-                  (b.data() as Map<String, dynamic>)['start_time'];
-              return aStart.compareTo(bStart);
-            });
+          // sortowanie dokumentów chronologicznie
+          var sortedDocuments = sortEvents(snapshot.data!);
 
-          List<Widget> eventWidgets = sortedDocs.map((doc) {
-            var data = doc.data() as Map<String, dynamic>;
-            String eventName = data['name'];
-            Timestamp startTimestamp = data['start_time'];
-            Timestamp endTimestamp = data['end_time'];
-            DateTime startTime = startTimestamp.toDate();
-            DateTime endTime = endTimestamp.toDate();
+          return ListView.builder(
+            itemCount: sortedDocuments.length,
+            itemBuilder: (context, index) {
+              var doc = sortedDocuments[index];
+              var data = doc.data() as Map<String, dynamic>;
+              String eventName = data['name'];
+              Timestamp startTimestamp = data['start_time'];
+              Timestamp endTimestamp = data['end_time'];
+              DateTime startTime = startTimestamp.toDate();
+              DateTime endTime = endTimestamp.toDate();
 
-            String startTimeFormatted = DateFormat('HH:mm').format(startTime);
-            String endTimeFormatted = DateFormat('HH:mm').format(endTime);
+              String startTimeFormatted = DateFormat('HH:mm').format(startTime);
+              String endTimeFormatted = DateFormat('HH:mm').format(endTime);
 
-            return Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          startTimeFormatted,
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          endTimeFormatted,
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Container(
-                      height: 40,
-                      child: VerticalDivider(
-                        width: 4.0,
-                        color: Colors.blue,
-                        thickness: 4.0,
+              return Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            startTimeFormatted,
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            endTimeFormatted,
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Expanded(
-                      child: Text(
-                        eventName,
-                        style: TextStyle(fontSize: 20),
+                      SizedBox(width: 8),
+                      Container(
+                        height: 40,
+                        child: VerticalDivider(
+                          width: 4.0,
+                          color: Theme.of(context).primaryColor,
+                          thickness: 4.0,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.0),
-              ],
-            );
-          }).toList();
-
-          return ListView(
-            children: eventWidgets,
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          eventName,
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.grey[700]),
+                        onPressed: () {
+                          showDeleteDialog(context, calendarService, calendarId,
+                              doc.id, selectedDay);
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10.0),
+                ],
+              );
+            },
           );
         }
       },
     );
   }
+
+  // usuwanie wydarzenia
+  void showDeleteDialog(BuildContext context, CalendarService calendarService,
+      String calendarId, String eventId, DateTime selectedDay) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Text("Czy na pewno chcesz usunąć to wydarzenie?"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Anuluj"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                calendarService
+                    .deleteEvent(calendarId, eventId, selectedDay)
+                    .then((_) => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Wydarzenie zostało usunięte'))))
+                    .catchError((error) => ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(
+                            content: Text('Nie udało się usunąć wydarzenia'))));
+              },
+              child: Text("Usuń"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+List<DocumentSnapshot> sortEvents(QuerySnapshot snapshot) {
+  return snapshot.docs.toList()
+    ..sort((eventA, eventB) {
+      Timestamp eventAStart =
+          (eventA.data() as Map<String, dynamic>)['start_time'];
+      Timestamp eventBStart =
+          (eventB.data() as Map<String, dynamic>)['start_time'];
+      return eventAStart.compareTo(eventBStart);
+    });
 }

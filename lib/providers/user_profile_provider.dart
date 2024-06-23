@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'auth_provider.dart';
 
 class UserProfile {
   final String firstName;
@@ -14,19 +15,13 @@ class UserProfile {
   });
 }
 
-final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
-  return FirebaseAuth.instance;
-});
-
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
-
+// Provider do pobierania aktualnie zalogowanego użytkownika
 final userProvider = FutureProvider<User?>((ref) async {
-  final firebaseAuth = ref.watch(firebaseAuthProvider);
-  return firebaseAuth.currentUser;
+  final user = ref.watch(currentUserProvider.future);
+  return user;
 });
 
+// Provider do pobierania danych usera
 final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final user = await ref.watch(userProvider.future);
   if (user != null) {
@@ -34,11 +29,11 @@ final userProfileProvider = FutureProvider<UserProfile>((ref) async {
         .collection('users')
         .doc(user.uid)
         .get();
-    final firstName = userData['firstName'] as String? ?? 'not found';
-    final lastName = userData['lastName'] as String? ?? 'not found';
-    final email = userData['email'] as String? ?? 'not found';
+    final firstName = userData['firstName'] as String? ?? 'brak';
+    final lastName = userData['lastName'] as String? ?? 'brak';
+    final email = userData['email'] as String? ?? 'brak';
     return UserProfile(firstName: firstName, lastName: lastName, email: email);
   } else {
-    throw Exception("User not logged in");
+    throw Exception("Użytkownik nie jest zalogowany");
   }
 });

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/auth_provider.dart';
-import 'loginPage.dart';
-import 'homePage.dart';
-import 'registerPage.dart';
+import 'login_screen.dart';
+import 'main_screen.dart';
+import 'register_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,12 +26,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginPage(),
-        '/register': (context) => RegisterPage(),
-        '/home': (context) => HomePage(),
+        '/': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/home': (context) => MainScreen(),
       },
       theme: ThemeData(
-        primaryColor: Colors.blue,
+        primaryColor: Colors.pinkAccent,
         backgroundColor: Colors.white,
         textTheme: TextTheme(
           bodyText1: TextStyle(color: Colors.white),
