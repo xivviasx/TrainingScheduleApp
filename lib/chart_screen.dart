@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'providers/calendar_provider.dart';
 
-class ChartScreen extends StatelessWidget {
+class ChartScreen extends ConsumerWidget {
   final DateTime selectedDay;
   final String calendarId;
 
-  const ChartScreen(
-      {Key? key, required this.selectedDay, required this.calendarId})
-      : super(key: key);
+  const ChartScreen({
+    Key? key,
+    required this.selectedDay,
+    required this.calendarId,
+  }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final calendarService = ref.watch(calendarServiceProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -24,7 +29,8 @@ class ChartScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: StreamBuilder<List<DateTime>>(
-          stream: getEventsForDayAsDateTimeList(calendarId, selectedDay),
+          stream: calendarService.getEventsForDayAsDateTimeList(
+              calendarId, selectedDay),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
@@ -41,27 +47,6 @@ class ChartScreen extends StatelessWidget {
     );
   }
 
-  Stream<List<DateTime>> getEventsForDayAsDateTimeList(
-      String calendarId, DateTime selectedDay) {
-    String dateString =
-        '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
-
-    return FirebaseFirestore.instance
-        .collection('calendars')
-        .doc(calendarId)
-        .collection('events')
-        .doc(dateString)
-        .collection('dayEvents')
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        Timestamp timestamp =
-            doc.get('start_time'); // Assuming 'start_time' is a Timestamp
-        return timestamp.toDate();
-      }).toList();
-    });
-  }
-
   Widget _buildChart(List<DateTime> events) {
     // Creating data for the chart
     Map<int, int> hourlyCounts = {};
@@ -76,6 +61,8 @@ class ChartScreen extends StatelessWidget {
         domainFn: (int count, index) => index.toString(),
         measureFn: (int count, _) => count,
         data: List.generate(24, (index) => hourlyCounts[index] ?? 0),
+        colorFn: (_, __) =>
+            charts.ColorUtil.fromDartColor(Colors.black), // Różowy kolor kolumn
         labelAccessorFn: (int count, _) => count.toString(),
       )
     ];

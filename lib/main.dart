@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => MainScreen(),
       },
       theme: ThemeData(
-        primaryColor: Colors.pinkAccent,
+        primaryColor: Colors.pink,
         backgroundColor: Colors.white,
         textTheme: TextTheme(
           bodyText1: TextStyle(color: Colors.white),

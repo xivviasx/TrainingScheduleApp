@@ -37,6 +37,8 @@ class EventList extends ConsumerWidget {
               var doc = sortedDocuments[index];
               var data = doc.data() as Map<String, dynamic>;
               String eventName = data['name'];
+              String eventType =
+                  data['event_type']; // Dodane pobranie typu wydarzenia
               Timestamp startTimestamp = data['start_time'];
               Timestamp endTimestamp = data['end_time'];
               DateTime startTime = startTimestamp.toDate();
@@ -56,18 +58,22 @@ class EventList extends ConsumerWidget {
                           Text(
                             startTimeFormatted,
                             style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             endTimeFormatted,
                             style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
                       SizedBox(width: 8),
                       Container(
-                        height: 40,
+                        height: 50,
                         child: VerticalDivider(
                           width: 4.0,
                           color: Theme.of(context).primaryColor,
@@ -76,17 +82,34 @@ class EventList extends ConsumerWidget {
                       ),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          eventName,
-                          style: TextStyle(fontSize: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              eventName,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              eventType, // Wyświetlenie typu wydarzenia
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       SizedBox(width: 8),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.grey[700]),
                         onPressed: () {
-                          showDeleteDialog(context, calendarService, calendarId,
-                              doc.id, selectedDay);
+                          showDeleteDialog(
+                            context,
+                            calendarService,
+                            calendarId,
+                            doc.id,
+                            selectedDay,
+                          );
                         },
                       ),
                     ],
@@ -102,8 +125,13 @@ class EventList extends ConsumerWidget {
   }
 
   // usuwanie wydarzenia
-  void showDeleteDialog(BuildContext context, CalendarService calendarService,
-      String calendarId, String eventId, DateTime selectedDay) {
+  void showDeleteDialog(
+    BuildContext context,
+    CalendarService calendarService,
+    String calendarId,
+    String eventId,
+    DateTime selectedDay,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -119,11 +147,18 @@ class EventList extends ConsumerWidget {
                 Navigator.of(context).pop();
                 calendarService
                     .deleteEvent(calendarId, eventId, selectedDay)
-                    .then((_) => ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Wydarzenie zostało usunięte'))))
-                    .catchError((error) => ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(
-                            content: Text('Nie udało się usunąć wydarzenia'))));
+                    .then(
+                      (_) => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Wydarzenie zostało usunięte')),
+                      ),
+                    )
+                    .catchError(
+                      (error) => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Nie udało się usunąć wydarzenia'),
+                        ),
+                      ),
+                    );
               },
               child: Text("Usuń"),
             ),
