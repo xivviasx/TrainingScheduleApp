@@ -70,6 +70,14 @@ class CalendarListScreen extends ConsumerWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            primary: Colors.white, // Kolor tła przycisku
+            onPrimary: Colors.black, // Kolor tekstu na przycisku
+            shadowColor: Colors.grey, // Kolor cienia
+            elevation: 3, // Wysokość cienia
+
+            padding: EdgeInsets.symmetric(horizontal: 24),
+          ),
           onPressed: () {
             _openCalendar(context, calendarId);
           },

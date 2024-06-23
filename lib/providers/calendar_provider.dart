@@ -210,12 +210,41 @@ class CalendarService {
     }
   }
 
+  Future<void> addEvent(
+      String calendarId,
+      DateTime selectedDay,
+      String eventName,
+      DateTime startTime,
+      DateTime endTime,
+      String eventType) async {
+    User? user = _firebaseAuth.currentUser;
+    if (user != null) {
+      String formattedDate =
+          '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
+
+      CollectionReference eventsCollection = _firestore
+          .collection('calendars')
+          .doc(calendarId)
+          .collection('events')
+          .doc(formattedDate)
+          .collection('dayEvents');
+
+      await eventsCollection.add({
+        'name': eventName,
+        'start_time': Timestamp.fromDate(startTime),
+        'end_time': Timestamp.fromDate(endTime),
+        'created_by': user.uid,
+        'event_type': eventType, // Dodanie informacji o typie wydarzenia
+      });
+    }
+  }
+
   Stream<List<DateTime>> getEventsForDayAsDateTimeList(
       String calendarId, DateTime selectedDay) {
     String dateString =
         '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
 
-    return _firestore
+    return FirebaseFirestore.instance
         .collection('calendars')
         .doc(calendarId)
         .collection('events')

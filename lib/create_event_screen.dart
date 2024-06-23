@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/calendar_provider.dart';
 
-class CreateEventScreen extends StatefulWidget {
+class CreateEventScreen extends ConsumerStatefulWidget {
   final DateTime selectedDay;
   final String calendarId;
 
@@ -13,21 +13,27 @@ class CreateEventScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<CreateEventScreen> createState() => _CreateEventScreenState();
+  _CreateEventScreenState createState() => _CreateEventScreenState();
 }
 
-class _CreateEventScreenState extends State<CreateEventScreen> {
+class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _startTimeController = TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
 
-  @override
-  void dispose() {
-    _eventNameController.dispose();
-    _startTimeController.dispose();
-    _endTimeController.dispose();
-    super.dispose();
-  }
+  // Lista dostępnych typów wydarzeń
+  List<String> eventTypes = [
+    'Trening skokowy',
+    'Trening ujeżdżeniowy',
+    'Lonżowanie',
+    'Zajeżdżanie konia',
+    'Spacer',
+    'Puszczanie luzem',
+    'Inne',
+  ];
+
+  // Wybrany typ wydarzenia
+  String selectedEventType = '';
 
   @override
   Widget build(BuildContext context) {
@@ -42,64 +48,84 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         backgroundColor: Theme.of(context).primaryColor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Nazwa:'),
-            SizedBox(height: 5),
-            TextFormField(
-              controller: _eventNameController,
-              decoration: InputDecoration(border: OutlineInputBorder()),
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 10),
-            Text('Godzina rozpoczęcia:'),
-            SizedBox(height: 5),
-            TextFormField(
-              controller: _startTimeController,
-              onTap: () {
-                _selectStartTime(context);
-              },
-              readOnly: true,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.access_time),
+      body: SingleChildScrollView(
+        // Wrap with SingleChildScrollView
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Nazwa:'),
+              SizedBox(height: 5),
+              TextFormField(
+                controller: _eventNameController,
+                decoration: InputDecoration(border: OutlineInputBorder()),
+                style: TextStyle(color: Colors.black),
               ),
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 10),
-            Text('Godzina zakończenia:'),
-            SizedBox(height: 5),
-            TextFormField(
-              controller: _endTimeController,
-              onTap: () {
-                _selectEndTime(context);
-              },
-              readOnly: true,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.access_time),
-              ),
-              style: TextStyle(color: Colors.black),
-            ),
-            SizedBox(height: 25),
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  _addEvent(context);
+              SizedBox(height: 10),
+              Text('Godzina rozpoczęcia:'),
+              SizedBox(height: 5),
+              TextFormField(
+                controller: _startTimeController,
+                onTap: () {
+                  _selectStartTime(context);
                 },
-                style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).primaryColor),
-                child: Text(
-                  'Dodaj',
-                  style: TextStyle(color: Colors.white),
+                readOnly: true,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.access_time),
+                ),
+                style: TextStyle(color: Colors.black),
+              ),
+              SizedBox(height: 10),
+              Text('Godzina zakończenia:'),
+              SizedBox(height: 5),
+              TextFormField(
+                controller: _endTimeController,
+                onTap: () {
+                  _selectEndTime(context);
+                },
+                readOnly: true,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.access_time),
+                ),
+                style: TextStyle(color: Colors.black),
+              ),
+              SizedBox(height: 10),
+              Text('Typ wydarzenia:'),
+              SizedBox(height: 5),
+              Column(
+                children: eventTypes
+                    .map((type) => RadioListTile(
+                          title: Text(type),
+                          value: type,
+                          groupValue: selectedEventType,
+                          onChanged: (String? value) {
+                            setState(() {
+                              selectedEventType = value ?? '';
+                            });
+                          },
+                        ))
+                    .toList(),
+              ),
+              SizedBox(height: 25),
+              Container(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _addEvent(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                      primary: Theme.of(context).primaryColor),
+                  child: Text(
+                    'Dodaj',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -130,41 +156,33 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> _addEvent(BuildContext context) async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DateTime startDateTime = DateTime(
-        widget.selectedDay.year,
-        widget.selectedDay.month,
-        widget.selectedDay.day,
-        int.parse(_startTimeController.text.split(':')[0]),
-        int.parse(_startTimeController.text.split(':')[1]),
-      );
-      DateTime endDateTime = DateTime(
-        widget.selectedDay.year,
-        widget.selectedDay.month,
-        widget.selectedDay.day,
-        int.parse(_endTimeController.text.split(':')[0]),
-        int.parse(_endTimeController.text.split(':')[1]),
-      );
+    final calendarService = ref.read(calendarServiceProvider);
 
-      String formattedDate =
-          '${widget.selectedDay.year}-${widget.selectedDay.month}-${widget.selectedDay.day}';
+    DateTime startDateTime = DateTime(
+      widget.selectedDay.year,
+      widget.selectedDay.month,
+      widget.selectedDay.day,
+      int.parse(_startTimeController.text.split(':')[0]),
+      int.parse(_startTimeController.text.split(':')[1]),
+    );
+    DateTime endDateTime = DateTime(
+      widget.selectedDay.year,
+      widget.selectedDay.month,
+      widget.selectedDay.day,
+      int.parse(_endTimeController.text.split(':')[0]),
+      int.parse(_endTimeController.text.split(':')[1]),
+    );
 
-      CollectionReference eventsCollection = FirebaseFirestore.instance
-          .collection('calendars')
-          .doc(widget.calendarId)
-          .collection('events')
-          .doc(formattedDate)
-          .collection('dayEvents');
+    // Przekazanie danych do dostawcy
+    await calendarService.addEvent(
+      widget.calendarId,
+      widget.selectedDay,
+      _eventNameController.text,
+      startDateTime,
+      endDateTime,
+      selectedEventType,
+    );
 
-      await eventsCollection.add({
-        'name': _eventNameController.text,
-        'start_time': Timestamp.fromDate(startDateTime),
-        'end_time': Timestamp.fromDate(endDateTime),
-        'created_by': user.uid,
-      });
-
-      Navigator.pop(context);
-    }
+    Navigator.pop(context);
   }
 }
