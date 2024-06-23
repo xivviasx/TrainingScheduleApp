@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/auth_provider.dart';
 
-class RegisterPage extends ConsumerWidget {
+class RegisterScreen extends ConsumerWidget {
+  // kontrolery formularzu rejestracji
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
@@ -76,7 +77,7 @@ class RegisterPage extends ConsumerWidget {
   }
 
   Future<void> _register(BuildContext context, WidgetRef ref) async {
-    final auth = ref.read(authProvider);
+    final auth = ref.read(authServiceProvider);
     try {
       await auth.register(
         _emailController.text.trim(),
@@ -84,13 +85,11 @@ class RegisterPage extends ConsumerWidget {
         _firstNameController.text.trim(),
         _lastNameController.text.trim(),
       );
-
       Navigator.pushReplacementNamed(context, '/');
     } catch (error) {
-      print('Registration error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Spróbuj ponownie.'),
+          content: Text('Wystąpił błąd, spróbuj ponownie'),
         ),
       );
     }

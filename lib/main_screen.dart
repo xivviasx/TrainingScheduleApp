@@ -1,32 +1,26 @@
-import 'package:Calendar/calendar_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'profilePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'calendar_list_screen.dart';
+import 'user_profile_screen.dart';
 import 'providers/auth_provider.dart';
 
-class HomePage extends ConsumerStatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _MainScreenState createState() => _MainScreenState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
-  Widget bodyWidget = CalendarMenu();
-
-  void _setBodyWidget(Widget widget) {
-    setState(() {
-      bodyWidget = widget;
-    });
-  }
+class _MainScreenState extends ConsumerState<MainScreen> {
+  Widget bodyWidget = CalendarListScreen();
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authStateProvider);
+    final authStateService = ref.watch(authChangesProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Kalendarz',
+          'CalendarApp',
           style: TextStyle(
             color: Colors.white,
           ),
@@ -56,14 +50,14 @@ class _HomePageState extends ConsumerState<HomePage> {
             ListTile(
               title: Text('Profil'),
               onTap: () {
-                _setBodyWidget(ProfilePage());
+                _setBodyWidget(UserProfileScreen());
                 Navigator.pop(context); // Close the drawer
               },
             ),
             ListTile(
               title: Text('Moje kalendarze'),
               onTap: () {
-                _setBodyWidget(CalendarMenu());
+                _setBodyWidget(CalendarListScreen());
                 Navigator.pop(context); // Close the drawer
               },
             ),
@@ -81,16 +75,22 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
-    final auth = ref.read(authProvider);
+    final auth = ref.read(authServiceProvider);
     try {
-      auth.signOut(context);
+      await auth.signOut(context);
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     } catch (error) {
-      print('Login error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Nie udało się wylogować'),
         ),
       );
     }
+  }
+
+  void _setBodyWidget(Widget widget) {
+    setState(() {
+      bodyWidget = widget;
+    });
   }
 }

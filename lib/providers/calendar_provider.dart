@@ -3,17 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'auth_provider.dart';
 
-final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
+final calendarServiceProvider = Provider<CalendarService>((ref) {
   final firestore = ref.read(firestoreProvider);
   final firebaseAuth = ref.read(firebaseAuthProvider);
-  return CalendarRepository(firestore, firebaseAuth);
+  return CalendarService(firestore, firebaseAuth);
 });
 
-class CalendarRepository {
+class CalendarService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _firebaseAuth;
 
-  CalendarRepository(this._firestore, this._firebaseAuth);
+  CalendarService(this._firestore, this._firebaseAuth);
 
   bool isUserLogged() {
     User? user = _firebaseAuth.currentUser;
@@ -29,7 +29,7 @@ class CalendarRepository {
           .collection('userCalendars')
           .snapshots();
     } else {
-      throw Exception("No user logged in");
+      throw Exception("Użytkonik nie jest zalogowany");
     }
   }
 
@@ -56,25 +56,6 @@ class CalendarRepository {
     }
   }
 
-  Stream<QuerySnapshot> getEventsForDay(
-      String calendarId, DateTime selectedDay) {
-    DateTime startOfDay =
-        DateTime(selectedDay.year, selectedDay.month, selectedDay.day, 0, 0, 0);
-    DateTime endOfDay = DateTime(
-        selectedDay.year, selectedDay.month, selectedDay.day, 23, 59, 59);
-
-    String formattedDate =
-        '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
-
-    return _firestore
-        .collection('calendars')
-        .doc(calendarId)
-        .collection('events')
-        .doc(formattedDate)
-        .collection('dayEvents')
-        .snapshots();
-  }
-
   Future<String> getCalendarName(String calendarId) async {
     DocumentSnapshot doc =
         await _firestore.collection('calendars').doc(calendarId).get();
@@ -83,71 +64,170 @@ class CalendarRepository {
       if (data != null && data.containsKey('name')) {
         return data['name'] as String;
       } else {
-        throw Exception("Calendar name not found");
+        throw Exception("Nie ma kalendaeza o takiej nazwie");
       }
     } else {
-      throw Exception("Calendar not found");
+      throw Exception("Nie znaleziono kalendarza");
     }
   }
 
-  Future<void> addParticipantByEmail(String calendarId, String email) async {
-    // Find the user by email
-    QuerySnapshot userQuery = await _firestore
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get();
+  Stream<QuerySnapshot> getEventsForDay(
+      String calendarId, DateTime selectedDay) {
+    DateTime startOfDay =
+        DateTime(selectedDay.year, selectedDay.month, selectedDay.day, 0, 0, 0);
+    DateTime endOfDay = DateTime(
+        selectedDay.year, selectedDay.month, selectedDay.day, 23, 59, 59);
 
-    if (userQuery.docs.isEmpty) {
-      throw Exception("User not found");
-    }
+    String Date = '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
 
-    DocumentSnapshot userDoc = userQuery.docs.first;
-    String userId = userDoc.id;
-
-    DocumentReference calendarRef =
-        _firestore.collection('calendars').doc(calendarId);
-    DocumentReference userRef = _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('userCalendars')
-        .doc(calendarId);
-
-    var calendarData = await calendarRef.get();
-    var calendarName =
-        (calendarData.data() as Map<String, dynamic>?)?['name'] ?? '';
-
-    await calendarRef
-        .collection('participants')
-        .doc(userId)
-        .set({'role': 'participant'});
-    await userRef.set({
-      'calendarId': calendarId,
-      'name': calendarName,
-      'role': 'participant'
-    });
+    return _firestore
+        .collection('calendars')
+        .doc(calendarId)
+        .collection('events')
+        .doc(Date)
+        .collection('dayEvents')
+        .snapshots();
   }
 
-  Stream<List<String>> getCalendarMembersNames(String calendarId) {
+  Future<void> deleteEvent(
+      String calendarId, String eventId, DateTime selectedDay) async {
+    User? user = _firebaseAuth.currentUser;
+    if (user != null) {
+      String dateString =
+          '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
+      await _firestore
+          .collection('calendars')
+          .doc(calendarId)
+          .collection('events')
+          .doc(dateString) // Dokument dla danego dnia
+          .collection('dayEvents')
+          .doc(eventId) // Dokument wydarzenia
+          .delete();
+    }
+  }
+
+  Stream<List<Map<String, String>>> getCalendarMembersInfo(String calendarId) {
     return _firestore
         .collection('calendars')
         .doc(calendarId)
         .collection('participants')
         .snapshots()
         .asyncMap((snapshot) async {
-      List<String> names = [];
+      List<Map<String, String>> usersInfo = [];
       for (DocumentSnapshot doc in snapshot.docs) {
         String userId = doc.id;
         DocumentSnapshot userDoc =
             await _firestore.collection('users').doc(userId).get();
         if (userDoc.exists) {
-          String? userEmail = userDoc.get('email');
-          if (userEmail != null) {
-            names.add(userEmail);
+          String? firstName = userDoc.get('firstName');
+          String? lastName = userDoc.get('lastName');
+          String? email = userDoc.get('email');
+          if (firstName != null && lastName != null && email != null) {
+            usersInfo.add({
+              'firstName': firstName,
+              'lastName': lastName,
+              'email': email,
+            });
           }
         }
       }
-      return names;
+      return usersInfo;
+    });
+  }
+
+  Future<void> addParticipantByEmail(String calendarId, String email) async {
+    // wyszukiwanie usera na podstawie id
+    QuerySnapshot userQuery = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+    // gdy ktoś próbuje dodać nieistniejącego usera
+    if (userQuery.docs.isEmpty) {
+      throw Exception("Nie znaleziono użytkownika");
+    }
+
+    // pobieranie Id wyszukanego usera
+    DocumentSnapshot userDoc = userQuery.docs.first;
+    String userId = userDoc.id;
+
+    // wyszukiwanie kalendarza an podstawie jego id
+    DocumentReference calendar =
+        _firestore.collection('calendars').doc(calendarId);
+    // wyszukiwanie kalendarzy usera
+    DocumentReference userCalendars = _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('userCalendars')
+        .doc(calendarId);
+
+    var calendarData = await calendar.get();
+    var calendarName =
+        (calendarData.data() as Map<String, dynamic>?)?['name'] ?? '';
+
+    await calendar
+        .collection('participants')
+        .doc(userId)
+        .set({'role': 'participant'});
+    await userCalendars.set({
+      'calendarId': calendarId,
+      'name': calendarName,
+      'role': 'participant'
+    });
+  }
+
+  Future<void> removeParticipantByEmail(String calendarId, String email) async {
+    try {
+      // Wyszukanie użytkownika na podstawie adresu e-mail
+      QuerySnapshot userQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (userQuery.docs.isEmpty) {
+        throw Exception("Nie znaleziono użytkownika");
+      }
+
+      // Pobranie ID użytkownika
+      DocumentSnapshot userDoc = userQuery.docs.first;
+      String userId = userDoc.id;
+
+      // Usunięcie uczestnika z kalendarza
+      DocumentReference calendarRef =
+          _firestore.collection('calendars').doc(calendarId);
+      await calendarRef.collection('participants').doc(userId).delete();
+
+      // Usunięcie kalendarza z kalendarzy użytkownika
+      DocumentReference userCalendarRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('userCalendars')
+          .doc(calendarId);
+      await userCalendarRef.delete();
+    } catch (e) {
+      throw Exception("Nie udało się usunąć uczestnika");
+    }
+  }
+
+  Stream<List<DateTime>> getEventsForDayAsDateTimeList(
+      String calendarId, DateTime selectedDay) {
+    String dateString =
+        '${selectedDay.year}-${selectedDay.month}-${selectedDay.day}';
+
+    return _firestore
+        .collection('calendars')
+        .doc(calendarId)
+        .collection('events')
+        .doc(dateString)
+        .collection('dayEvents')
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        Timestamp timestamp =
+            doc.get('start_time'); // Assuming 'start_time' is a Timestamp
+        return timestamp.toDate();
+      }).toList();
     });
   }
 }

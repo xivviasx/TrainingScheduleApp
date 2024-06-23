@@ -2,29 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CreateEventPage extends StatefulWidget {
+class CreateEventScreen extends StatefulWidget {
   final DateTime selectedDay;
   final String calendarId;
 
-  const CreateEventPage(
-      {Key? key, required this.selectedDay, required this.calendarId})
-      : super(key: key);
+  const CreateEventScreen({
+    Key? key,
+    required this.selectedDay,
+    required this.calendarId,
+  }) : super(key: key);
 
   @override
-  State<CreateEventPage> createState() => _CreateEventPageState();
+  State<CreateEventScreen> createState() => _CreateEventScreenState();
 }
 
-class _CreateEventPageState extends State<CreateEventPage> {
+class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController _eventNameController = TextEditingController();
+  final TextEditingController _startTimeController = TextEditingController();
+  final TextEditingController _endTimeController = TextEditingController();
 
-  TimeOfDay _startTime = TimeOfDay.now();
-  TimeOfDay _endTime =
-      TimeOfDay.now().replacing(hour: TimeOfDay.now().hour + 1);
+  @override
+  void dispose() {
+    _eventNameController.dispose();
+    _startTimeController.dispose();
+    _endTimeController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Nowy trening')),
+      appBar: AppBar(
+        title: Text(
+          'Nowy trening',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -40,55 +57,47 @@ class _CreateEventPageState extends State<CreateEventPage> {
             SizedBox(height: 10),
             Text('Godzina rozpoczęcia:'),
             SizedBox(height: 5),
-            InkWell(
+            TextFormField(
+              controller: _startTimeController,
               onTap: () {
                 _selectStartTime(context);
               },
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      '${_startTime.hour}:${_startTime.minute}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    Icon(Icons.arrow_drop_down),
-                  ],
-                ),
+              readOnly: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.access_time),
               ),
+              style: TextStyle(color: Colors.black),
             ),
             SizedBox(height: 10),
             Text('Godzina zakończenia:'),
             SizedBox(height: 5),
-            InkWell(
+            TextFormField(
+              controller: _endTimeController,
               onTap: () {
                 _selectEndTime(context);
               },
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      '${_endTime.hour}:${_endTime.minute}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    Icon(Icons.arrow_drop_down),
-                  ],
+              readOnly: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.access_time),
+              ),
+              style: TextStyle(color: Colors.black),
+            ),
+            SizedBox(height: 25),
+            Container(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  _addEvent(context);
+                },
+                style: ElevatedButton.styleFrom(
+                    primary: Theme.of(context).primaryColor),
+                child: Text(
+                  'Dodaj',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                _addEvent(context);
-              },
-              child: Text('Dodaj'),
             ),
           ],
         ),
@@ -99,11 +108,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
   Future<void> _selectStartTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: _startTime,
+      initialTime: TimeOfDay.now(),
     );
     if (picked != null) {
       setState(() {
-        _startTime = picked;
+        _startTimeController.text = '${picked.hour}:${picked.minute}';
       });
     }
   }
@@ -111,11 +120,11 @@ class _CreateEventPageState extends State<CreateEventPage> {
   Future<void> _selectEndTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: _endTime,
+      initialTime: TimeOfDay.now(),
     );
     if (picked != null) {
       setState(() {
-        _endTime = picked;
+        _endTimeController.text = '${picked.hour}:${picked.minute}';
       });
     }
   }
@@ -127,15 +136,15 @@ class _CreateEventPageState extends State<CreateEventPage> {
         widget.selectedDay.year,
         widget.selectedDay.month,
         widget.selectedDay.day,
-        _startTime.hour,
-        _startTime.minute,
+        int.parse(_startTimeController.text.split(':')[0]),
+        int.parse(_startTimeController.text.split(':')[1]),
       );
       DateTime endDateTime = DateTime(
         widget.selectedDay.year,
         widget.selectedDay.month,
         widget.selectedDay.day,
-        _endTime.hour,
-        _endTime.minute,
+        int.parse(_endTimeController.text.split(':')[0]),
+        int.parse(_endTimeController.text.split(':')[1]),
       );
 
       String formattedDate =

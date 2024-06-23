@@ -1,32 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'day.dart';
-import 'members_page.dart';
+import 'day_details_screen.dart';
+import 'participants_screen.dart';
 import 'providers/calendar_provider.dart';
 
-class Calendar extends ConsumerWidget {
+class CalendarDetails extends ConsumerWidget {
   final String calendarId;
 
-  const Calendar({Key? key, required this.calendarId}) : super(key: key);
+  const CalendarDetails({Key? key, required this.calendarId}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final calendarRepository = ref.watch(calendarRepositoryProvider);
+    final calendarService = ref.watch(calendarServiceProvider);
 
     return Scaffold(
       appBar: AppBar(
+        // pobieranie nazwy kalendarza
         title: FutureBuilder<String>(
-          future: calendarRepository.getCalendarName(calendarId),
+          future: calendarService.getCalendarName(calendarId),
           builder: (context, snapshot) {
             return Text(
-              snapshot.data ?? 'Kalendarz',
+              snapshot.data ??
+                  'Kalendarz', // nazwa kalendarza lub napis 'Kalendarz'
               style: TextStyle(
                 color: Colors.white,
               ),
             );
           },
         ),
+
+        // uczestnicy kalendarza
         backgroundColor: Theme.of(context).primaryColor,
         iconTheme: IconThemeData(color: Colors.white),
         actions: [
@@ -36,13 +40,16 @@ class Calendar extends ConsumerWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MembersPage(calendarId: calendarId),
+                  builder: (context) =>
+                      ParticipantsScreen(calendarId: calendarId),
                 ),
               );
             },
           ),
         ],
       ),
+
+      // kaledarz
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -57,8 +64,8 @@ class Calendar extends ConsumerWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      Day(selectedDay: selectedDay, calendarId: calendarId),
+                  builder: (context) => DayDetailsScreen(
+                      selectedDay: selectedDay, calendarId: calendarId),
                 ),
               );
             },

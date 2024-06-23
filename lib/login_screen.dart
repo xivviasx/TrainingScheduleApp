@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/auth_provider.dart';
 
-class LoginPage extends ConsumerWidget {
+class LoginScreen extends ConsumerWidget {
+  // kontrolery
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
+    final authState = ref.watch(authChangesProvider);
 
+    // Jesli user jest juz zalogowany to przechodzi od razu do strony domowej
     authState.when(
       data: (user) {
         if (user != null) {
@@ -78,7 +80,7 @@ class LoginPage extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/register');
+                  _register(context, ref);
                 },
                 style: ElevatedButton.styleFrom(primary: Colors.grey[300]),
                 child: Text(
@@ -93,20 +95,24 @@ class LoginPage extends ConsumerWidget {
     );
   }
 
+  // metody asynchroniczne
   Future<void> _login(BuildContext context, WidgetRef ref) async {
-    final auth = ref.read(authProvider);
+    final auth = ref.read(authServiceProvider);
     try {
       await auth.signIn(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
+        _emailController.text,
+        _passwordController.text,
       );
     } catch (error) {
-      print('Login error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login failed. Please try again.'),
+          content: Text('Spróbuj ponownie'),
         ),
       );
     }
+  }
+
+  void _register(BuildContext context, WidgetRef ref) async {
+    Navigator.pushNamed(context, '/register');
   }
 }
