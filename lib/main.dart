@@ -24,14 +24,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
-        '/': (context) => LoginScreen(),
+        '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
         '/home': (context) => MainScreen(),
       },
       theme: ThemeData(
-        primaryColor: Colors.pink,
+        primaryColor: Colors.red,
         backgroundColor: Colors.white,
         textTheme: TextTheme(
           bodyText1: TextStyle(color: Colors.white),
