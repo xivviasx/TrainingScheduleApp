@@ -15,25 +15,20 @@ class UserProfile {
   });
 }
 
-// Provider do pobierania aktualnie zalogowanego użytkownika
-final userProvider = FutureProvider<User?>((ref) async {
-  final user = ref.watch(currentUserProvider.future);
-  return user;
-});
+final userProfileProvider = StreamProvider<UserProfile>((ref) {
+  final _firebaseAuth = ref.watch(firebaseAuthProvider);
+  final _firestore = ref.watch(firestoreProvider);
 
-// Provider do pobierania danych usera
-final userProfileProvider = FutureProvider<UserProfile>((ref) async {
-  final user = await ref.watch(userProvider.future);
-  if (user != null) {
-    final userData = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    final firstName = userData['firstName'] as String? ?? 'brak';
-    final lastName = userData['lastName'] as String? ?? 'brak';
-    final email = userData['email'] as String? ?? 'brak';
-    return UserProfile(firstName: firstName, lastName: lastName, email: email);
-  } else {
-    throw Exception("Użytkownik nie jest zalogowany");
-  }
+  return _firebaseAuth.authStateChanges().asyncMap((user) async {
+    if (user != null) {
+      final userData = await _firestore.collection('users').doc(user.uid).get();
+      final firstName = userData.get('firstName') as String? ?? 'brak';
+      final lastName = userData.get('lastName') as String? ?? 'brak';
+      final email = userData.get('email') as String? ?? 'brak';
+      return UserProfile(
+          firstName: firstName, lastName: lastName, email: email);
+    } else {
+      throw Exception("Użytkownik nie jest zalogowany");
+    }
+  });
 });

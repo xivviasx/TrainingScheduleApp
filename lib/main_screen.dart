@@ -78,7 +78,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final auth = ref.read(authServiceProvider);
     try {
       await auth.signOut(context);
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

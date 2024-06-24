@@ -85,7 +85,6 @@ class RegisterScreen extends ConsumerWidget {
         _firstNameController.text.trim(),
         _lastNameController.text.trim(),
       );
-      Navigator.pushReplacementNamed(context, '/');
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
