@@ -170,6 +170,7 @@ class EventList extends ConsumerWidget {
 }
 
 List<DocumentSnapshot> sortEvents(QuerySnapshot snapshot) {
+  // sortuje dokumenty według start_time i zwraca liste dokumentów
   return snapshot.docs.toList()
     ..sort((eventA, eventB) {
       Timestamp eventAStart =

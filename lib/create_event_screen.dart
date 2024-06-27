@@ -96,6 +96,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
               Text('Typ wydarzenia:'),
               SizedBox(height: 5),
               Column(
+                // buttony z typami wydarzenia
                 children: eventTypes
                     .map((type) => RadioListTile(
                           title: Text(type),
@@ -132,6 +133,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   }
 
   Future<void> _selectStartTime(BuildContext context) async {
+    // okno z wybieraniem godziny
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -169,8 +171,8 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       widget.selectedDay.year,
       widget.selectedDay.month,
       widget.selectedDay.day,
-      int.parse(_endTimeController.text.split(':')[0]),
-      int.parse(_endTimeController.text.split(':')[1]),
+      int.parse(_endTimeController.text.split(':')[0]), // godzina
+      int.parse(_endTimeController.text.split(':')[1]), // minuty
     );
 
     // Przekazanie danych do dostawcy
