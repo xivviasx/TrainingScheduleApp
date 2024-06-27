@@ -20,7 +20,7 @@ class ChartScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Wykres wydarzeń',
+          'Oblężenie',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Theme.of(context).primaryColor,
@@ -48,22 +48,25 @@ class ChartScreen extends ConsumerWidget {
   }
 
   Widget _buildChart(List<DateTime> events) {
-    // Creating data for the chart
-    Map<int, int> hourlyCounts = {};
+    // dane do utworzenia wykresu
+    Map<int, int> licznik = {};
     for (DateTime event in events) {
       int hour = event.hour;
-      hourlyCounts[hour] = (hourlyCounts[hour] ?? 0) + 1;
+      // jesli nie ma jeszcze utworzonego licznika dla danej godziny to tworzy go i ustawia na 0
+      licznik[hour] = (licznik[hour] ?? 0) + 1;
     }
 
     List<charts.Series<int, String>> series = [
       charts.Series<int, String>(
         id: 'Events',
+        //oś X, godziny
         domainFn: (int count, index) => index.toString(),
+        //oś Y, liczba wydarzeń
         measureFn: (int count, _) => count,
-        data: List.generate(24, (index) => hourlyCounts[index] ?? 0),
+        
+        data: List.generate(24, (index) => licznik[index] ?? 0),
         colorFn: (_, __) =>
-            charts.ColorUtil.fromDartColor(Colors.black), // Różowy kolor kolumn
-        labelAccessorFn: (int count, _) => count.toString(),
+            charts.ColorUtil.fromDartColor(Colors.black), // kolor wykresu
       )
     ];
 
@@ -71,10 +74,7 @@ class ChartScreen extends ConsumerWidget {
       series,
       animate: true,
       vertical: false,
-      barRendererDecorator: charts.BarLabelDecorator<String>(),
-      domainAxis: charts.OrdinalAxisSpec(
-        renderSpec: charts.SmallTickRendererSpec(labelRotation: 60),
-      ),
+      barRendererDecorator: charts.BarLabelDecorator<String>(), // cyfra reprezentująca ilość treningów
     );
   }
 }

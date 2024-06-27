@@ -60,6 +60,8 @@ class CalendarService {
         'name': calendarName,
         'role': 'owner'
       });
+    } else {
+      throw Exception("User nie jest zalogowany");
     }
   }
 

@@ -63,7 +63,7 @@ class CalendarListScreen extends ConsumerWidget {
     return snapshot.docs.map((document) {
       var data = document.data() as Map<String, dynamic>;
       // klucze (String) => calendarId, name
-      // wartośści kluczy (dynamic) => wartości dla calendarId, name
+      // wartości kluczy (dynamic) => wartości dla calendarId, name
       String calendarId = data['calendarId'];
       String calendarName = data['name'];
 
@@ -71,12 +71,8 @@ class CalendarListScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            primary: Colors.white, // Kolor tła przycisku
-            onPrimary: Colors.black, // Kolor tekstu na przycisku
-            shadowColor: Colors.grey, // Kolor cienia
-            elevation: 3, // Wysokość cienia
-
-            padding: EdgeInsets.symmetric(horizontal: 24),
+            primary: Colors.grey[300],
+            onPrimary: Colors.black,
           ),
           onPressed: () {
             _openCalendar(context, calendarId);
@@ -90,41 +86,36 @@ class CalendarListScreen extends ConsumerWidget {
     }).toList();
   }
 
-  // funkcja do tworzenia nowych kalendarzy
   void _createNewCalendar(BuildContext context, WidgetRef ref) async {
     final calendarService = ref.read(calendarServiceProvider);
+    // okno dialogowe z pobieraniem nazwy kalendarza
+    String? calendarName = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        // kontroler nazwy nowego kalendarza
+        TextEditingController _calendarNameController = TextEditingController();
+        return AlertDialog(
+          title: Text('Utwórz nowy kalendarz'),
+          content: TextField(
+              controller: _calendarNameController,
+              decoration: InputDecoration(
+                  hintText: "Podaj nazwę", fillColor: Colors.blue),
+              style: TextStyle(color: Colors.black)),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(_calendarNameController.text);
+              },
+              child: Text('Dodaj'),
+            ),
+          ],
+        );
+      },
+    );
 
-    if (calendarService.isUserLogged() == true) {
-      // okno dialogowe z pobieraniem nazwy kalendarza
-      String? calendarName = await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          // kontroler nazwy nowego kalendarza
-          TextEditingController _calendarNameController =
-              TextEditingController();
-          return AlertDialog(
-            title: Text('Utwórz nowy kalendarz'),
-            content: TextField(
-                controller: _calendarNameController,
-                decoration: InputDecoration(
-                    hintText: "Podaj nazwę", fillColor: Colors.blue),
-                style: TextStyle(color: Colors.black)),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(_calendarNameController.text);
-                },
-                child: Text('Dodaj'),
-              ),
-            ],
-          );
-        },
-      );
-
-      // tworzenie nowego kalendarza w bazie
-      if (calendarName != null && calendarName.isNotEmpty) {
-        await calendarService.createNewCalendar(calendarName);
-      }
+    // tworzenie nowego kalendarza w bazie
+    if (calendarName != null && calendarName.isNotEmpty) {
+      await calendarService.createNewCalendar(calendarName);
     }
   }
 

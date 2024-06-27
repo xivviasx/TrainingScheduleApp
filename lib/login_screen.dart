@@ -15,6 +15,7 @@ class LoginScreen extends ConsumerWidget {
     authState.when(
       data: (user) {
         if (user != null) {
+          //metoda uruchomiona po zakończeniu budowania interfejsu użytkownika
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pushReplacementNamed(context, '/home');
           });

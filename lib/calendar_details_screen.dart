@@ -57,9 +57,6 @@ class CalendarDetails extends ConsumerWidget {
             firstDay: DateTime.utc(2010, 10, 16),
             lastDay: DateTime.utc(2030, 3, 14),
             focusedDay: DateTime.now(),
-            selectedDayPredicate: (day) {
-              return isSameDay(DateTime.now(), day);
-            },
             onDaySelected: (selectedDay, focusedDay) {
               Navigator.push(
                 context,
